@@ -23,9 +23,15 @@ def save_thank_you_letters(id,form_letter)
 end
 
 def clean_phone_number(phone_number)
-  phone_number.gsub!(/^\d/, "")
-  puts phone_number
-
+  phone_number.gsub!(/[^\d]/, "")
+  if phone_number.length == 10
+    return phone_number
+  elsif phone_number.length == 11 && phone_number[0] == "1"
+    phone_number[0] = ""
+    return phone_number
+  else
+    return "Bad Number"
+  end
 end
 
 
@@ -47,5 +53,7 @@ contents.each do |row|
   form_letter = erb_template.result(binding)
     
   save_thank_you_letters(id,form_letter)
+
+  puts phone_number
 
 end
