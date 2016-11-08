@@ -1,7 +1,7 @@
 require "csv"
 require "sunlight/congress"
 require "erb"
-require "time"
+require "date"
 
 Sunlight::Congress.api_key = "e179a6973728c4dd3fb1204283aaccb5"
 
@@ -58,6 +58,15 @@ def mode(x)
   a[where]                 
 end
 
+def get_reg_day(date)
+  date = date[/.+\s/]
+  month = date[/\w+/]
+  year = date.gsub(/\w+\/\w+\//,"")
+  day = date[/[^\w]\w+[^\/w+]/]
+  day[0] = ""
+  Date.new(year.to_i,month.to_i,day.to_i).wday
+end
+
 
 
 puts "EventManager initialized"
@@ -68,11 +77,14 @@ template_letter = File.read "../form_letter.erb"
 erb_template = ERB.new template_letter
 
 peak_hour = []
+best_day = []
 
 contents.each do |row|
   id = row[0]
   name = row[:first_name]
   reg_hour = get_reg_hour(row[:regdate])
+  reg_day = get_reg_day(row[:regdate])
+  best_day << reg_day
   peak_hour << reg_hour
   zipcode = clean_zipcode(row[:zipcode])
   phone_number = clean_phone_number(row[:homephone])
@@ -84,3 +96,4 @@ contents.each do |row|
 end
 
 puts "The best hour to run ads is hour " + mode(peak_hour)
+puts "Most people register on " + Date::DAYNAMES[mode(best_day)]
