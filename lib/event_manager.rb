@@ -1,6 +1,7 @@
 require "csv"
 require "sunlight/congress"
 require "erb"
+require "time"
 
 Sunlight::Congress.api_key = "e179a6973728c4dd3fb1204283aaccb5"
 
@@ -34,6 +35,28 @@ def clean_phone_number(phone_number)
   end
 end
 
+def get_reg_hour(reg_date)
+  time = reg_date[/\s.+/]
+  time[0] = ""
+  hour = time[/\d+/]
+end
+
+def mode(x)
+  sorted = x.sort
+  a = Array.new
+  b = Array.new
+  sorted.each do |x|
+    if a.index(x)==nil
+      a << x 
+      b << 1
+    else
+      b[a.index(x)] += 1
+    end
+  end
+  maxval = b.max         
+  where = b.index(maxval) 
+  a[where]                 
+end
 
 
 
@@ -44,16 +67,20 @@ contents = CSV.open "../event_attendees.csv", headers: true, header_converters: 
 template_letter = File.read "../form_letter.erb"
 erb_template = ERB.new template_letter
 
+peak_hour = []
+
 contents.each do |row|
   id = row[0]
   name = row[:first_name]
+  reg_hour = get_reg_hour(row[:regdate])
+  peak_hour << reg_hour
   zipcode = clean_zipcode(row[:zipcode])
   phone_number = clean_phone_number(row[:homephone])
   legislators = legislators_by_zipcode(zipcode)
   form_letter = erb_template.result(binding)
-    
+
   save_thank_you_letters(id,form_letter)
 
-  puts phone_number
-
 end
+
+puts "The best hour to run ads is hour " + mode(peak_hour)
